@@ -1,0 +1,550 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		554B53AA30128B0000826514 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 554B536330126B7F00826514 /* Assets.xcassets */; };
+		554B53533012648100826514 /* VpngateShared in Frameworks */ = {isa = PBXBuildFile; productRef = 554B53523012648100826514 /* VpngateShared */; };
+		554B53A130128A0000826514 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B53A230128A0000826514 /* AppDelegate.swift */; };
+		554B536B30126E5100826514 /* HelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B536430126B7F00826514 /* HelperClient.swift */; };
+		554B536C30126E5100826514 /* LogViewerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B536530126B7F00826514 /* LogViewerWindow.swift */; };
+		554B536D30126E5100826514 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B536630126B7F00826514 /* MenuBarView.swift */; };
+		554B536E30126E5100826514 /* ServerListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B536730126B7F00826514 /* ServerListStore.swift */; };
+		554B536F30126E5100826514 /* VpngateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B536930126B7F00826514 /* VpngateApp.swift */; };
+		554B538130127C5000826514 /* HelperXPCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537B30127C5000826514 /* HelperXPCService.swift */; };
+		554B538230127C5000826514 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537D30127C5000826514 /* main.swift */; };
+		554B538330127C5000826514 /* OpenVPNSupervisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537E30127C5000826514 /* OpenVPNSupervisor.swift */; };
+		554B538630127D8A00826514 /* VpngateShared in Frameworks */ = {isa = PBXBuildFile; productRef = 554B538530127D8A00826514 /* VpngateShared */; };
+		554B538B30127EFC00826514 /* VpngateHelper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 554B537430127C0800826514 /* VpngateHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		554B539130127F0000826514 /* com.davegallant.vpngate.helper.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		554B538730127EC400826514 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 554B532D3012632400826514 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 554B537330127C0800826514;
+			remoteInfo = VpngateHelper;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		554B537230127C0800826514 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		554B538930127ED600826514 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchDaemons;
+			dstSubfolderSpec = 1;
+			files = (
+				554B538B30127EFC00826514 /* VpngateHelper in CopyFiles */,
+				554B539130127F0000826514 /* com.davegallant.vpngate.helper.plist in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		554B53353012632400826514 /* VPNGate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VPNGate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		554B53A230128A0000826514 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		554B536330126B7F00826514 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		554B536430126B7F00826514 /* HelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperClient.swift; sourceTree = "<group>"; };
+		554B536530126B7F00826514 /* LogViewerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogViewerWindow.swift; sourceTree = "<group>"; };
+		554B536630126B7F00826514 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		554B536730126B7F00826514 /* ServerListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerListStore.swift; sourceTree = "<group>"; };
+		554B536830126B7F00826514 /* Vpngate.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Vpngate.entitlements; sourceTree = "<group>"; };
+		554B536930126B7F00826514 /* VpngateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VpngateApp.swift; sourceTree = "<group>"; };
+		554B537430127C0800826514 /* VpngateHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = VpngateHelper; sourceTree = BUILT_PRODUCTS_DIR; };
+		554B537B30127C5000826514 /* HelperXPCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperXPCService.swift; sourceTree = "<group>"; };
+		554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.davegallant.vpngate.helper.plist; sourceTree = "<group>"; };
+		554B537D30127C5000826514 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		554B537E30127C5000826514 /* OpenVPNSupervisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenVPNSupervisor.swift; sourceTree = "<group>"; };
+		554B537F30127C5000826514 /* VpngateHelper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VpngateHelper.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		554B53323012632400826514 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554B53533012648100826514 /* VpngateShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		554B537130127C0800826514 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554B538630127D8A00826514 /* VpngateShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		554B532C3012632400826514 = {
+			isa = PBXGroup;
+			children = (
+				554B538030127C5000826514 /* Helper */,
+				554B53363012632400826514 /* Products */,
+				554B536A30126B7F00826514 /* App */,
+				554B538430127D8A00826514 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		554B53363012632400826514 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				554B53353012632400826514 /* VPNGate.app */,
+				554B537430127C0800826514 /* VpngateHelper */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		554B536A30126B7F00826514 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				554B53A230128A0000826514 /* AppDelegate.swift */,
+				554B536330126B7F00826514 /* Assets.xcassets */,
+				554B536430126B7F00826514 /* HelperClient.swift */,
+				554B536530126B7F00826514 /* LogViewerWindow.swift */,
+				554B536630126B7F00826514 /* MenuBarView.swift */,
+				554B536730126B7F00826514 /* ServerListStore.swift */,
+				554B536830126B7F00826514 /* Vpngate.entitlements */,
+				554B536930126B7F00826514 /* VpngateApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		554B538030127C5000826514 /* Helper */ = {
+			isa = PBXGroup;
+			children = (
+				554B537B30127C5000826514 /* HelperXPCService.swift */,
+				554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */,
+				554B537D30127C5000826514 /* main.swift */,
+				554B537E30127C5000826514 /* OpenVPNSupervisor.swift */,
+				554B537F30127C5000826514 /* VpngateHelper.entitlements */,
+			);
+			path = Helper;
+			sourceTree = "<group>";
+		};
+		554B538430127D8A00826514 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		554B53343012632400826514 /* Vpngate */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 554B53403012632500826514 /* Build configuration list for PBXNativeTarget "Vpngate" */;
+			buildPhases = (
+				554B53313012632400826514 /* Sources */,
+				554B53323012632400826514 /* Frameworks */,
+				554B53333012632400826514 /* Resources */,
+				554B538930127ED600826514 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				554B538830127EC400826514 /* PBXTargetDependency */,
+			);
+			name = Vpngate;
+			packageProductDependencies = (
+				554B53523012648100826514 /* VpngateShared */,
+			);
+			productName = Vpngate;
+			productReference = 554B53353012632400826514 /* VPNGate.app */;
+			productType = "com.apple.product-type.application";
+		};
+		554B537330127C0800826514 /* VpngateHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 554B537830127C0800826514 /* Build configuration list for PBXNativeTarget "VpngateHelper" */;
+			buildPhases = (
+				554B537030127C0800826514 /* Sources */,
+				554B537130127C0800826514 /* Frameworks */,
+				554B537230127C0800826514 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VpngateHelper;
+			packageProductDependencies = (
+				554B538530127D8A00826514 /* VpngateShared */,
+			);
+			productName = VpngateHelper;
+			productReference = 554B537430127C0800826514 /* VpngateHelper */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		554B532D3012632400826514 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					554B53343012632400826514 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+					554B537330127C0800826514 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+				};
+			};
+			buildConfigurationList = 554B53303012632400826514 /* Build configuration list for PBXProject "Vpngate" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 554B532C3012632400826514;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				554B536230126A8700826514 /* XCLocalSwiftPackageReference "Shared" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 554B53363012632400826514 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				554B53343012632400826514 /* Vpngate */,
+				554B537330127C0800826514 /* VpngateHelper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		554B53333012632400826514 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554B53AA30128B0000826514 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		554B53313012632400826514 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554B53A130128A0000826514 /* AppDelegate.swift in Sources */,
+				554B536B30126E5100826514 /* HelperClient.swift in Sources */,
+				554B536C30126E5100826514 /* LogViewerWindow.swift in Sources */,
+				554B536D30126E5100826514 /* MenuBarView.swift in Sources */,
+				554B536E30126E5100826514 /* ServerListStore.swift in Sources */,
+				554B536F30126E5100826514 /* VpngateApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		554B537030127C0800826514 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				554B538130127C5000826514 /* HelperXPCService.swift in Sources */,
+				554B538230127C5000826514 /* main.swift in Sources */,
+				554B538330127C5000826514 /* OpenVPNSupervisor.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		554B538830127EC400826514 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 554B537330127C0800826514 /* VpngateHelper */;
+			targetProxy = 554B538730127EC400826514 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		554B533E3012632500826514 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		554B533F3012632500826514 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		554B53413012632500826514 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Vpngate.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8P4N929397;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = VPNGate;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.davegallant.Vpngate;
+				PRODUCT_NAME = VPNGate;
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		554B53423012632500826514 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Vpngate.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8P4N929397;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = VPNGate;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.davegallant.Vpngate;
+				PRODUCT_NAME = VPNGate;
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		554B537930127C0800826514 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Helper/VpngateHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8P4N929397;
+				INFOPLIST_FILE = Helper/com.davegallant.vpngate.helper.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		554B537A30127C0800826514 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Helper/VpngateHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 8P4N929397;
+				INFOPLIST_FILE = Helper/com.davegallant.vpngate.helper.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		554B53303012632400826514 /* Build configuration list for PBXProject "Vpngate" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				554B533E3012632500826514 /* Debug */,
+				554B533F3012632500826514 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		554B53403012632500826514 /* Build configuration list for PBXNativeTarget "Vpngate" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				554B53413012632500826514 /* Debug */,
+				554B53423012632500826514 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		554B537830127C0800826514 /* Build configuration list for PBXNativeTarget "VpngateHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				554B537930127C0800826514 /* Debug */,
+				554B537A30127C0800826514 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		554B536230126A8700826514 /* XCLocalSwiftPackageReference "Shared" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Shared;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		554B53523012648100826514 /* VpngateShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VpngateShared;
+		};
+		554B538530127D8A00826514 /* VpngateShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 554B536230126A8700826514 /* XCLocalSwiftPackageReference "Shared" */;
+			productName = VpngateShared;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 554B532D3012632400826514 /* Project object */;
+}
