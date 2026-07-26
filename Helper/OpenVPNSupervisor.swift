@@ -19,10 +19,15 @@ final class OpenVPNSupervisor {
 
     private var process: Process?
     private var managementClient: ManagementClient?
+    private let killSwitch = KillSwitchController()
     private(set) var currentState = ConnectionState.disconnected
 
     var onStateChange: ((ConnectionState) -> Void)?
     var onLogLine: ((LogLine) -> Void)?
+
+    init() {
+        killSwitch.flushStaleRulesOnStartup()
+    }
 
     // The helper daemon's own executable is embedded at
     // `VPNGate.app/Contents/Library/LaunchDaemons/...` -- `Bundle.main`

@@ -27,6 +27,11 @@ public enum ConnectionPhase: String, Codable, Equatable {
     case reconnecting
     case exiting
     case failed
+    /// The kill switch is still blocking non-tunnel traffic, but `openvpn`
+    /// exited without an explicit `disconnect()` -- distinct from
+    /// `.disconnected` so the app never shows a stale "Connected" (or a
+    /// misleadingly plain "Not connected") after an unexpected drop.
+    case blocked
     case unknown
 }
 
