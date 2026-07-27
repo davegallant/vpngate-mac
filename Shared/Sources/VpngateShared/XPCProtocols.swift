@@ -6,8 +6,12 @@ import Foundation
 /// A nil `Data?` reply on connect/disconnect means success; non-nil means
 /// a JSON-encoded HelperOperationError.
 @objc public protocol VpngateHelperXPCProtocol {
-    /// `serverJSON` is a JSON-encoded Server.
-    func connect(serverJSON: Data, reply: @escaping (Data?) -> Void)
+    /// `serverJSON` is a JSON-encoded Server. `killSwitchEnabled` arms a
+    /// pf-based kill switch for the duration of this connection: while
+    /// armed, a dropped tunnel blocks non-tunnel traffic instead of
+    /// leaking it, until the tunnel is (re)established or `disconnect()`
+    /// is called.
+    func connect(serverJSON: Data, killSwitchEnabled: Bool, reply: @escaping (Data?) -> Void)
     func disconnect(reply: @escaping (Data?) -> Void)
     /// `reply` receives a JSON-encoded ConnectionState.
     func status(reply: @escaping (Data) -> Void)

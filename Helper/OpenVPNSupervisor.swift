@@ -20,6 +20,20 @@ final class OpenVPNSupervisor {
     private var process: Process?
     private var managementClient: ManagementClient?
     private let killSwitch = KillSwitchController()
+    private var allowedRemotes: [RemoteEndpoint] = []
+    private var killSwitchEnabled = false
+    private var tunnelInterfaceArmed = false
+    /// Set once openvpn's own log reports "Initialization Sequence
+    /// Completed" -- i.e. the tunnel itself is up (TLS handshake done,
+    /// routes installed), independent of whether our management-port
+    /// control channel ever connects. Used by the mgmt-failure handler
+    /// below: a control-channel dial failure after this point means we've
+    /// lost the ability to *monitor*/*signal* the tunnel, not that the
+    /// tunnel itself failed -- tearing down a working connection because
+    /// of that would be strictly worse for the user than keeping it up
+    /// without live state updates.
+    private var tunnelInitialized = false
+    private var isExplicitDisconnect = false
     private(set) var currentState = ConnectionState.disconnected
 
     var onStateChange: ((ConnectionState) -> Void)?
@@ -84,13 +98,30 @@ final class OpenVPNSupervisor {
         log(text)
     }
 
-    func connect(to server: Server) async throws {
+    func connect(to server: Server, killSwitchEnabled: Bool) async throws {
         guard let executablePath = resolveOpenvpnPath() else {
             throw HelperOperationError.openvpnNotFound()
         }
         log("using openvpn at \(executablePath)")
         guard let configData = Data(base64Encoded: server.openVpnConfigDataBase64) else {
             throw HelperOperationError(code: "invalidConfig", message: "server config was not valid base64")
+        }
+
+        let configText = String(decoding: configData, as: UTF8.self)
+        allowedRemotes = OpenVPNConfigParser.parseRemotes(configText: configText)
+        self.killSwitchEnabled = killSwitchEnabled
+        tunnelInterfaceArmed = false
+        tunnelInitialized = false
+        isExplicitDisconnect = false
+
+        if killSwitchEnabled {
+            do {
+                try killSwitch.engage(allowedRemotes: allowedRemotes)
+                log("[killswitch] armed (LAN + \(allowedRemotes.count) remote(s)), tunnel interface pending")
+            } catch {
+                log("[killswitch] engage failed: \(error)")
+                throw HelperOperationError(code: "killSwitchFailed", message: "failed to arm kill switch: \(error)")
+            }
         }
 
         let configURL = FileManager.default.temporaryDirectory.appendingPathComponent("vpngate-\(UUID().uuidString).ovpn")
@@ -126,10 +157,17 @@ final class OpenVPNSupervisor {
             for line in text.split(separator: "\n") {
                 self?.persistLogLine(String(line))
                 self?.onLogLine?(LogLine(text: String(line), timestamp: Date()))
+                self?.armTunnelInterfaceIfNeeded(fromLogLine: String(line))
+                if String(line).localizedCaseInsensitiveContains("Initialization Sequence Completed") {
+                    self?.tunnelInitialized = true
+                }
             }
         }
 
         updateState(phase: .connecting, server: server)
+        process.terminationHandler = { [weak self] _ in
+            self?.handleUnexpectedExit()
+        }
         try process.run()
         self.process = process
 
@@ -147,16 +185,76 @@ final class OpenVPNSupervisor {
             }
         } catch {
             log("[mgmt] connect flow threw: \(error)")
-            // A failed connect() must never leave the openvpn process
-            // dangling with no way to reach it -- disconnect() only works
-            // once self.process/self.managementClient are set, which a
-            // thrown error here would otherwise leave running but orphaned.
-            await cleanUpAfterFailedConnect()
-            throw error
+            // A failed control-channel dial after openvpn has already
+            // reported the tunnel itself up is not a connection failure --
+            // routes are installed and traffic is flowing. Tearing the
+            // whole tunnel down here would trade a working (but
+            // unmonitorable/unsignalable) VPN connection for no connection
+            // at all, which is strictly worse for the user. Stay connected;
+            // `disconnect()` already falls back to `process.terminate()`
+            // when `managementClient` is nil, so the user can still stop it.
+            guard !(error is CancellationError), tunnelInitialized else {
+                // A user-cancelled attempt (Stop clicked mid-connect, or a
+                // different server picked before this one resolved) is not
+                // a connection failure -- the fail-closed "stay armed"
+                // policy below is for genuine handshake failures, where
+                // blocking until retry is the point. Leaving pf armed
+                // after the user explicitly asked to stop would just
+                // strand them.
+                let isCancellation = error is CancellationError
+                await cleanUpAfterFailedConnect(
+                    disengageKillSwitch: isCancellation,
+                    lastError: isCancellation ? nil : "connect failed: \(error)"
+                )
+                throw error
+            }
+            log("[mgmt] tunnel already up (Initialization Sequence Completed) -- staying connected without a live control channel")
+            updateState(phase: .connected, server: server)
         }
     }
 
-    private func cleanUpAfterFailedConnect() async {
+    /// Scans openvpn's own log output for its interface-open line (e.g.
+    /// "Opened utun device utun3") to learn which utun interface the
+    /// tunnel is using, then extends the kill switch's pf rules to allow
+    /// traffic on it. Runs at most once per connection attempt. Not
+    /// actor-isolated -- this fires from the readabilityHandler's
+    /// background queue, same as the rest of this closure's log
+    /// bookkeeping, which already tolerates concurrent access to this
+    /// class's state (see the class-level docs on `process`/
+    /// `managementClient`).
+    private func armTunnelInterfaceIfNeeded(fromLogLine line: String) {
+        guard killSwitchEnabled, !tunnelInterfaceArmed else { return }
+        guard line.localizedCaseInsensitiveContains("open"),
+              let range = line.range(of: "utun[0-9]+", options: .regularExpression) else { return }
+        let interfaceName = String(line[range])
+        tunnelInterfaceArmed = true
+        do {
+            try killSwitch.extendWithTunnelInterface(interfaceName, allowedRemotes: allowedRemotes)
+            log("[killswitch] armed for tunnel interface \(interfaceName)")
+        } catch {
+            log("[killswitch] failed to extend for tunnel interface \(interfaceName): \(error)")
+            Task { [weak self] in
+                await self?.cleanUpAfterFailedConnect(disengageKillSwitch: true, lastError: "kill switch failed to arm for tunnel interface")
+            }
+        }
+    }
+
+    /// Tears down a connection attempt that didn't make it to CONNECTED.
+    ///
+    /// `disengageKillSwitch: true` fully clears pf and reports
+    /// `.disconnected` -- used when there's nothing left to protect (e.g.
+    /// arming the tunnel-interface exception itself failed, so the
+    /// tunnel's own traffic was never going to be let through anyway).
+    ///
+    /// `disengageKillSwitch: false` leaves pf armed at whatever exception
+    /// set it already had (LAN + server, since the interface exception is
+    /// only added after CONNECTED-adjacent progress) and reports
+    /// `.blocked` instead of `.disconnected` -- used when the management
+    /// handshake itself failed, since blocking non-LAN traffic until the
+    /// user retries is the fail-closed behavior the kill switch exists
+    /// for.
+    private func cleanUpAfterFailedConnect(disengageKillSwitch: Bool, lastError: String? = nil) async {
+        isExplicitDisconnect = true
         if let managementClient {
             try? await managementClient.disconnect()
             await managementClient.close()
@@ -164,7 +262,16 @@ final class OpenVPNSupervisor {
         managementClient = nil
         process?.terminate()
         process = nil
-        updateState(phase: .disconnected, server: nil)
+        if disengageKillSwitch, killSwitchEnabled {
+            killSwitch.disengage()
+            log("[killswitch] disengaged after failed connect")
+            killSwitchEnabled = false
+        } else if killSwitchEnabled {
+            let exceptions = tunnelInterfaceArmed ? "LAN + server + tunnel interface" : "LAN + server only"
+            log("[killswitch] left armed (\(exceptions)) after failed connect -- pf still blocking non-tunnel traffic")
+        }
+        tunnelInterfaceArmed = false
+        updateState(phase: killSwitchEnabled ? .blocked : .disconnected, server: nil, lastError: lastError)
     }
 
     func disconnect() async throws {
@@ -172,6 +279,7 @@ final class OpenVPNSupervisor {
         // `process` even if `managementClient` is nil -- e.g. openvpn is
         // running but hasn't finished the management handshake yet -- so a
         // disconnect/stop request never leaves it dangling.
+        isExplicitDisconnect = true
         if let managementClient {
             try await managementClient.disconnect()
             await managementClient.close()
@@ -179,10 +287,37 @@ final class OpenVPNSupervisor {
         managementClient = nil
         process?.terminate()
         process = nil
+        if killSwitchEnabled {
+            killSwitch.disengage()
+            log("[killswitch] disengaged")
+        }
+        killSwitchEnabled = false
+        tunnelInterfaceArmed = false
         updateState(phase: .disconnected, server: nil)
     }
 
-    private func updateState(phase: ConnectionPhase, server: Server?) {
+    /// Runs whenever openvpn exits on its own, whether that's an
+    /// unexpected crash/kill or the tail end of an explicit
+    /// `disconnect()` -- `isExplicitDisconnect` (set at the top of
+    /// `disconnect()`/`cleanUpAfterFailedConnect()`) distinguishes the
+    /// two so this doesn't clobber state a normal disconnect already
+    /// finished setting. An unexpected exit while the kill switch is
+    /// armed means pf is still blocking non-tunnel traffic -- that's the
+    /// whole point -- but the app needs to know the tunnel itself is gone
+    /// rather than keep showing a stale "Connected".
+    private func handleUnexpectedExit() {
+        guard !isExplicitDisconnect else { return }
+        process = nil
+        managementClient = nil
+        if killSwitchEnabled {
+            log("[killswitch] openvpn exited unexpectedly -- kill switch still blocking non-tunnel traffic")
+        } else {
+            log("openvpn exited unexpectedly")
+        }
+        updateState(phase: killSwitchEnabled ? .blocked : .disconnected, server: nil, lastError: "openvpn exited unexpectedly")
+    }
+
+    private func updateState(phase: ConnectionPhase, server: Server?, lastError: String? = nil) {
         currentState = ConnectionState(
             phase: phase,
             hostName: server?.hostName ?? "",
@@ -190,7 +325,7 @@ final class OpenVPNSupervisor {
             countryLong: server?.countryLong ?? "",
             countryShort: server?.countryShort ?? "",
             startedAt: phase == .connected ? Date() : currentState.startedAt,
-            lastError: nil
+            lastError: lastError
         )
         onStateChange?(currentState)
     }

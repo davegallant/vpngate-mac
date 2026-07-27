@@ -3,3 +3,4 @@ build/
 Shared/.build/
 xcuserdata/
 .swiftpm/
+docs/superpowers/

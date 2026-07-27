@@ -21,6 +21,18 @@ build:
 package:
     {{clean_env}} ./build-and-package.sh
 
+# Build, package, and install VPNGate.app to /Applications, then restart the
+# helper daemon so it picks up changes under Helper/ -- overwriting the app
+# bundle alone does not restart an already-running launchd daemon (see
+# README's "Installing" section). Quits the running app first, if any;
+# relaunches it after.
+install: package
+    killall VPNGate 2>/dev/null || true
+    rm -rf /Applications/VPNGate.app
+    cp -R build/VPNGate.app /Applications/VPNGate.app
+    sudo launchctl kickstart -k system/com.davegallant.vpngate.helper
+    open /Applications/VPNGate.app
+
 # Tag and push a release, e.g. `just release 0.0.1-rc1`. Pushing the tag
 # triggers .github/workflows/release.yml, which tests, builds, signs, and
 # publishes VPNGate.zip as a GitHub Release. Update CHANGELOG.md and commit

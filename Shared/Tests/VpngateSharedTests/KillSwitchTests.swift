@@ -42,6 +42,24 @@ final class KillSwitchTests: XCTestCase {
         XCTAssertEqual(OpenVPNConfigParser.parseRemotes(configText: config), [])
     }
 
+    /// Real .ovpn files (including VPNGate's) are CRLF-terminated.
+    /// Regression test for a bug where splitting on a bare "\n" found
+    /// zero remotes on real CRLF content, because Swift's `Character`
+    /// treats "\r\n" as a single grapheme cluster distinct from "\n".
+    /// Also covers the top-level `proto` directive (VPNGate's configs
+    /// specify protocol there, not on the `remote` line itself).
+    func testParseRemotes_crlfLineEndings() {
+        let config = "client\r\ndev tun\r\nproto tcp\r\nremote 219.100.37.98 443\r\ncipher AES-128-CBC\r\n"
+        let remotes = OpenVPNConfigParser.parseRemotes(configText: config)
+        XCTAssertEqual(remotes, [RemoteEndpoint(ip: "219.100.37.98", port: 443, proto: "tcp")])
+    }
+
+    func testParseRemotes_protoTcpClientNormalizedToTcp() {
+        let config = "proto tcp-client\r\nremote 219.100.37.98 443\r\n"
+        let remotes = OpenVPNConfigParser.parseRemotes(configText: config)
+        XCTAssertEqual(remotes, [RemoteEndpoint(ip: "219.100.37.98", port: 443, proto: "tcp")])
+    }
+
     // MARK: - KillSwitchRules
 
     func testPfRules_withoutTunnelInterface() {
@@ -50,13 +68,13 @@ final class KillSwitchTests: XCTestCase {
             tunnelInterface: nil
         )
         XCTAssertEqual(rules, """
-        pass out quick on lo0 all keep state
+        pass quick on lo0 all keep state
         pass out quick inet from any to 10.0.0.0/8 keep state
         pass out quick inet from any to 172.16.0.0/12 keep state
         pass out quick inet from any to 192.168.0.0/16 keep state
         pass out quick inet from any to 169.254.0.0/16 keep state
         pass out quick proto udp from any to 203.0.113.5 port 1194 keep state
-        block drop out all
+        block drop out quick all
 
         """)
     }
@@ -67,7 +85,7 @@ final class KillSwitchTests: XCTestCase {
             tunnelInterface: "utun3"
         )
         XCTAssertTrue(rules.contains("pass out quick on utun3 keep state\n"))
-        XCTAssertTrue(rules.hasSuffix("block drop out all\n"))
+        XCTAssertTrue(rules.hasSuffix("block drop out quick all\n"))
     }
 
     func testPfRules_multipleRemotesAllExempted() {
