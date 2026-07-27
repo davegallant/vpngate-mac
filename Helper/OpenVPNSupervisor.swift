@@ -20,9 +20,20 @@ final class OpenVPNSupervisor {
     private var process: Process?
     private var managementClient: ManagementClient?
     private let killSwitch = KillSwitchController()
+    private let dnsController = DNSController()
     private var allowedRemotes: [RemoteEndpoint] = []
     private var killSwitchEnabled = false
     private var tunnelInterfaceArmed = false
+    /// DNS servers pushed by the server (parsed from its PUSH_REPLY log
+    /// line) and the physical interface the tunnel is riding on top of
+    /// (parsed from openvpn's own `ROUTE_GATEWAY ... IFACE=en0` log line) --
+    /// `applyDNSIfNeeded` needs both before it can look up which network
+    /// *service* (e.g. "Wi-Fi") to point at the pushed resolvers.
+    private var pushedDNSServers: [String] = []
+    private var physicalInterface: String?
+    private var dnsApplied = false
+    private var dnsServiceName: String?
+    private var originalDNSServers: [String]?
     /// Set once openvpn's own log reports "Initialization Sequence
     /// Completed" -- i.e. the tunnel itself is up (TLS handshake done,
     /// routes installed), independent of whether our management-port
@@ -113,6 +124,11 @@ final class OpenVPNSupervisor {
         tunnelInterfaceArmed = false
         tunnelInitialized = false
         isExplicitDisconnect = false
+        pushedDNSServers = []
+        physicalInterface = nil
+        dnsApplied = false
+        dnsServiceName = nil
+        originalDNSServers = nil
 
         if killSwitchEnabled {
             do {
@@ -161,6 +177,7 @@ final class OpenVPNSupervisor {
                 if String(line).localizedCaseInsensitiveContains("Initialization Sequence Completed") {
                     self?.tunnelInitialized = true
                 }
+                self?.scanForDNSInfo(fromLogLine: String(line))
             }
         }
 
@@ -239,6 +256,77 @@ final class OpenVPNSupervisor {
         }
     }
 
+    /// Scans openvpn's own log output for the two lines `applyDNSIfNeeded`
+    /// needs: the PUSH_REPLY (server-pushed DNS servers) and the
+    /// `ROUTE_GATEWAY ... IFACE=en0 ...` line (the physical interface the
+    /// tunnel rides on top of, needed to look up which network *service*
+    /// owns it). Not actor-isolated, same as `armTunnelInterfaceIfNeeded`
+    /// -- fires from the readabilityHandler's background queue.
+    private func scanForDNSInfo(fromLogLine line: String) {
+        if line.contains("PUSH_REPLY") {
+            pushedDNSServers = PushedDNS.parseServers(fromPushReplyLine: line)
+        }
+        if let range = line.range(of: "IFACE=\\S+", options: .regularExpression) {
+            physicalInterface = String(line[range].dropFirst("IFACE=".count))
+        }
+        applyDNSIfNeeded()
+    }
+
+    /// Points the active network service's DNS at the server-pushed
+    /// resolvers, once both the pushed servers and the physical interface
+    /// are known. Runs at most once per connection attempt. Best-effort --
+    /// unlike the kill switch, DNS isn't fail-closed: a lookup or
+    /// `networksetup` failure here must never fail the connection, only
+    /// leave DNS resolution using whatever the system already had.
+    private func applyDNSIfNeeded() {
+        guard !dnsApplied, !pushedDNSServers.isEmpty, let iface = physicalInterface else { return }
+        dnsApplied = true
+        do {
+            guard let service = try dnsController.serviceName(forInterface: iface) else {
+                log("[dns] no network service found for interface \(iface), leaving DNS untouched")
+                return
+            }
+            originalDNSServers = try dnsController.currentDNSServers(service: service)
+            try dnsController.setDNSServers(service: service, servers: pushedDNSServers)
+            dnsServiceName = service
+            log("[dns] set \(service) DNS to \(pushedDNSServers.joined(separator: ", "))")
+        } catch {
+            log("[dns] failed to apply pushed DNS servers: \(error)")
+        }
+    }
+
+    /// Restores whatever DNS servers `applyDNSIfNeeded` overwrote. Called
+    /// from every teardown path (`disconnect()`, `cleanUpAfterFailedConnect()`,
+    /// `handleUnexpectedExit()`) since a leaked resolver pointed at a dead
+    /// tunnel would outlive the connection. Idempotent: clears `dnsApplied`
+    /// before doing the actual restore so a second call (e.g.
+    /// `handleUnexpectedExit()` firing after an explicit `disconnect()`
+    /// already restored it) is a no-op instead of writing the
+    /// already-restored values back as if they were the originals.
+    ///
+    /// Also clears `pushedDNSServers`/`physicalInterface` here, not just at
+    /// the top of `connect()` -- the just-terminated process's stdout pipe
+    /// keeps delivering buffered lines (e.g. "Closing TUN/TAP interface",
+    /// "SIGTERM ... received") to `scanForDNSInfo` for a moment after
+    /// `terminate()` is called, since the readabilityHandler only stops once
+    /// the pipe reaches EOF. Left populated, those stale values would let
+    /// `applyDNSIfNeeded`'s guard pass again the instant `dnsApplied` flips
+    /// back to false below, re-applying the DNS this call just restored.
+    private func restoreDNSIfNeeded() {
+        guard dnsApplied, let service = dnsServiceName else { return }
+        dnsApplied = false
+        pushedDNSServers = []
+        physicalInterface = nil
+        do {
+            try dnsController.setDNSServers(service: service, servers: originalDNSServers ?? [])
+            log("[dns] restored \(service) to \(originalDNSServers?.joined(separator: ", ") ?? "automatic")")
+        } catch {
+            log("[dns] restore failed: \(error)")
+        }
+        dnsServiceName = nil
+        originalDNSServers = nil
+    }
+
     /// Tears down a connection attempt that didn't make it to CONNECTED.
     ///
     /// `disengageKillSwitch: true` fully clears pf and reports
@@ -262,6 +350,7 @@ final class OpenVPNSupervisor {
         managementClient = nil
         process?.terminate()
         process = nil
+        restoreDNSIfNeeded()
         if disengageKillSwitch, killSwitchEnabled {
             killSwitch.disengage()
             log("[killswitch] disengaged after failed connect")
@@ -287,6 +376,7 @@ final class OpenVPNSupervisor {
         managementClient = nil
         process?.terminate()
         process = nil
+        restoreDNSIfNeeded()
         if killSwitchEnabled {
             killSwitch.disengage()
             log("[killswitch] disengaged")
@@ -309,6 +399,7 @@ final class OpenVPNSupervisor {
         guard !isExplicitDisconnect else { return }
         process = nil
         managementClient = nil
+        restoreDNSIfNeeded()
         if killSwitchEnabled {
             log("[killswitch] openvpn exited unexpectedly -- kill switch still blocking non-tunnel traffic")
         } else {
@@ -328,5 +419,88 @@ final class OpenVPNSupervisor {
             lastError: lastError
         )
         onStateChange?(currentState)
+    }
+}
+
+enum DNSControllerError: Error, CustomStringConvertible {
+    case networksetupFailed(String)
+
+    var description: String {
+        switch self {
+        case .networksetupFailed(let detail): return "networksetup failed: \(detail)"
+        }
+    }
+}
+
+/// Wraps `networksetup` to point a network service's DNS at OpenVPN's
+/// pushed resolvers and restore it afterward. Only consumer is
+/// `OpenVPNSupervisor`, so this lives alongside it rather than as its own
+/// file (same reasoning as `ResumeOnceGuard` living inside
+/// `ManagementClient.swift`) -- `Helper/` is a plain Xcode group with
+/// explicit file references rather than a synchronized folder, so adding a
+/// new file there means hand-editing `.pbxproj` UUIDs that can't be
+/// compile-checked in this environment.
+final class DNSController {
+    private let networksetupPath = "/usr/sbin/networksetup"
+
+    /// Maps a device name (e.g. "en0") to its network *service* name (e.g.
+    /// "Wi-Fi") by parsing `networksetup -listnetworkserviceorder`, whose
+    /// output looks like:
+    ///   (1) Wi-Fi
+    ///   (Hardware Port: Wi-Fi, Device: en0)
+    /// The service name -- the "(N) <name>" line -- is what `-setdnsservers`
+    /// takes, and it is NOT guaranteed to match the hardware port name: a
+    /// user can rename a service independently of its hardware port.
+    /// Returns nil if no service maps to `interface`, e.g. the tunnel's own
+    /// virtual interface, which never appears here.
+    func serviceName(forInterface interface: String) throws -> String? {
+        let output = try runNetworksetup(["-listnetworkserviceorder"])
+        var pendingServiceName: String?
+        for rawLine in output.split(separator: "\n") {
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            if let range = line.range(of: "^\\(\\d+\\)\\s+", options: .regularExpression) {
+                pendingServiceName = String(line[range.upperBound...])
+            } else if line.contains("Device: \(interface)") {
+                return pendingServiceName
+            }
+        }
+        return nil
+    }
+
+    /// The DNS servers currently configured for `service`, or `[]` if it's
+    /// set to automatic ("There aren't any DNS Servers set on <service>.").
+    func currentDNSServers(service: String) throws -> [String] {
+        let output = try runNetworksetup(["-getdnsservers", service])
+        if output.localizedCaseInsensitiveContains("There aren't any DNS Servers set on") {
+            return []
+        }
+        return output.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    }
+
+    /// Sets `service`'s DNS servers to `servers`, or back to automatic if
+    /// `servers` is empty -- `networksetup` uses the literal argument
+    /// "Empty" for that, there's no separate "clear" command.
+    func setDNSServers(service: String, servers: [String]) throws {
+        let values = servers.isEmpty ? ["Empty"] : servers
+        _ = try runNetworksetup(["-setdnsservers", service] + values)
+    }
+
+    @discardableResult
+    private func runNetworksetup(_ arguments: [String]) throws -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: networksetupPath)
+        process.arguments = arguments
+        let stdoutPipe = Pipe()
+        let stderrPipe = Pipe()
+        process.standardOutput = stdoutPipe
+        process.standardError = stderrPipe
+        try process.run()
+        process.waitUntilExit()
+        let outData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+        let errData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        guard process.terminationStatus == 0 else {
+            throw DNSControllerError.networksetupFailed(String(data: errData, encoding: .utf8) ?? "unknown networksetup error")
+        }
+        return String(data: outData, encoding: .utf8) ?? ""
     }
 }
