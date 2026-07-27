@@ -45,4 +45,11 @@ final class ModelsTests: XCTestCase {
         let decoded = try JSONDecoder().decode(HelperOperationError.self, from: data)
         XCTAssertEqual(decoded, err)
     }
+
+    func testConnectionPhaseBlockedRoundTrip() throws {
+        XCTAssertEqual(ConnectionPhase.blocked.rawValue, "blocked")
+        let data = try JSONEncoder().encode(ConnectionPhase.blocked)
+        let decoded = try JSONDecoder().decode(ConnectionPhase.self, from: data)
+        XCTAssertEqual(decoded, .blocked)
+    }
 }

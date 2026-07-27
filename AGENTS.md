@@ -89,6 +89,22 @@ One active connection at a time — same as the original Go daemon.
   ping/score filtering, sort options, proxy/socks5, `--reconnect`-loop
   mode, random connect, or a NetworkExtension-based connection engine.
   Don't add these without discussing scope first.
+- Kill switch: `OpenVPNSupervisor`/`KillSwitchController` load pf rules
+  into anchor `com.apple/250.vpngate` (macOS's stock `anchor
+  "com.apple/*"` wildcard in `/etc/pf.conf` picks it up automatically —
+  `/etc/pf.conf` itself is never edited). While armed, only loopback,
+  LAN/link-local ranges (`10.0.0.0/8`, `172.16.0.0/12`,
+  `192.168.0.0/16`, `169.254.0.0/16`), the VPN server(s) parsed from
+  the `.ovpn` config's `remote` lines, and (once known) the tunnel's
+  `utunN` interface can send traffic out. The helper has no persisted
+  state across restarts, so `OpenVPNSupervisor.init()` unconditionally
+  flushes the anchor on startup. Toggle lives in the App's own
+  `UserDefaults` key `killSwitchEnabled` (default `true`), passed
+  fresh on every `connect()` XPC call — no shared storage between the
+  App and Helper sandboxes. Arming failure aborts the connection
+  before `openvpn` starts. An unexpected `openvpn` exit while armed
+  surfaces as `ConnectionPhase.blocked` (pf still blocking non-tunnel
+  traffic), not a stale `.connected` or a plain `.disconnected`.
 
 ## Building, testing, packaging
 
@@ -205,3 +221,6 @@ What actually exists, not what was once planned:
   is gone — a known v1 limitation, not something to patch around.
 - `openvpn` bundling into the app isn't fully automated yet (manual
   Xcode build-phase step required).
+- Kill switch pf rules are IPv4-only (the LAN exception ranges and the
+  block-all catch-all don't cover IPv6). Not a bug to silently "fix" —
+  scope this explicitly if IPv6 routes turn out to be in play.

@@ -18,6 +18,7 @@
 		554B538130127C5000826514 /* HelperXPCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537B30127C5000826514 /* HelperXPCService.swift */; };
 		554B538230127C5000826514 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537D30127C5000826514 /* main.swift */; };
 		554B538330127C5000826514 /* OpenVPNSupervisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B537E30127C5000826514 /* OpenVPNSupervisor.swift */; };
+		554B53F130127C5000826514 /* KillSwitchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554B53F030127C5000826514 /* KillSwitchController.swift */; };
 		554B538630127D8A00826514 /* VpngateShared in Frameworks */ = {isa = PBXBuildFile; productRef = 554B538530127D8A00826514 /* VpngateShared */; };
 		554B538B30127EFC00826514 /* VpngateHelper in CopyFiles */ = {isa = PBXBuildFile; fileRef = 554B537430127C0800826514 /* VpngateHelper */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		554B539130127F0000826514 /* com.davegallant.vpngate.helper.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */; };
@@ -71,6 +72,7 @@
 		554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = com.davegallant.vpngate.helper.plist; sourceTree = "<group>"; };
 		554B537D30127C5000826514 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		554B537E30127C5000826514 /* OpenVPNSupervisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenVPNSupervisor.swift; sourceTree = "<group>"; };
+		554B53F030127C5000826514 /* KillSwitchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KillSwitchController.swift; sourceTree = "<group>"; };
 		554B537F30127C5000826514 /* VpngateHelper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VpngateHelper.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -135,6 +137,7 @@
 				554B537C30127C5000826514 /* com.davegallant.vpngate.helper.plist */,
 				554B537D30127C5000826514 /* main.swift */,
 				554B537E30127C5000826514 /* OpenVPNSupervisor.swift */,
+				554B53F030127C5000826514 /* KillSwitchController.swift */,
 				554B537F30127C5000826514 /* VpngateHelper.entitlements */,
 			);
 			path = Helper;
@@ -265,6 +268,7 @@
 				554B538130127C5000826514 /* HelperXPCService.swift in Sources */,
 				554B538230127C5000826514 /* main.swift in Sources */,
 				554B538330127C5000826514 /* OpenVPNSupervisor.swift in Sources */,
+				554B53F130127C5000826514 /* KillSwitchController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -112,13 +112,13 @@ final class HelperClient: NSObject, ObservableObject, VpngateHelperClientXPCProt
         } as? VpngateHelperXPCProtocol
     }
 
-    func connect(to server: Server) async throws {
+    func connect(to server: Server, killSwitchEnabled: Bool) async throws {
         guard let helper = remoteHelper() else {
             throw HelperOperationError(code: "helperUnavailable", message: "Helper unavailable")
         }
         let payload = try JSONEncoder().encode(server)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            helper.connect(serverJSON: payload) { errorData in
+            helper.connect(serverJSON: payload, killSwitchEnabled: killSwitchEnabled) { errorData in
                 if let errorData, let err = try? JSONDecoder().decode(HelperOperationError.self, from: errorData) {
                     continuation.resume(throwing: err)
                 } else {

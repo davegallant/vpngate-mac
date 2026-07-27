@@ -40,7 +40,7 @@ final class HelperXPCService: NSObject, VpngateHelperXPCProtocol {
         }
     }
 
-    func connect(serverJSON: Data, reply: @escaping (Data?) -> Void) {
+    func connect(serverJSON: Data, killSwitchEnabled: Bool, reply: @escaping (Data?) -> Void) {
         guard let server = try? JSONDecoder().decode(Server.self, from: serverJSON) else {
             let err = HelperOperationError(code: "invalidRequest", message: "malformed server payload")
             reply(try? JSONEncoder().encode(err))
@@ -65,7 +65,7 @@ final class HelperXPCService: NSObject, VpngateHelperXPCProtocol {
             }
             await self?.supervisor.debugLog("[stop] connect task started")
             do {
-                try await self?.supervisor.connect(to: server)
+                try await self?.supervisor.connect(to: server, killSwitchEnabled: killSwitchEnabled)
                 reply(nil)
             } catch is CancellationError {
                 await self?.supervisor.debugLog("[stop] connect task saw CancellationError, replying cancelled")

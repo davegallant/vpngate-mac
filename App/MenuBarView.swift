@@ -32,6 +32,7 @@ struct MenuBarView: View {
     @EnvironmentObject var serverList: ServerListStore
     @Environment(\.openWindow) private var openWindow
     @State private var countryFilter: String = ""
+    @AppStorage("killSwitchEnabled") private var killSwitchEnabled: Bool = true
     @State private var isConnecting = false
     @State private var isStopping = false
     @State private var errorMessage: String?
@@ -120,7 +121,21 @@ struct MenuBarView: View {
             Divider()
 
             HStack {
-                Button("Open Logs") {
+                Button {
+                    killSwitchEnabled.toggle()
+                } label: {
+                    Label("Kill Switch", systemImage: killSwitchEnabled ? "shield.fill" : "shield.slash")
+                        .foregroundColor(killSwitchEnabled ? .green : .secondary)
+                }
+                .disabled(helper.connectionState.phase != .disconnected)
+                .opacity(helper.connectionState.phase != .disconnected ? 0.4 : 1)
+                .help(helper.connectionState.phase != .disconnected
+                    ? "Kill Switch setting only applies to the next connection"
+                    : killSwitchEnabled
+                        ? "Kill Switch: On -- blocks all non-tunnel traffic if the connection drops unexpectedly"
+                        : "Kill Switch: Off")
+
+                Button("Logs") {
                     // openWindow(id:) only creates the window if it doesn't
                     // exist yet -- if it's already open (just not frontmost),
                     // this call is a no-op, so the window needs to be found
@@ -164,7 +179,11 @@ struct MenuBarView: View {
                 ProgressView().controlSize(.small)
             } else {
                 Circle()
-                    .fill(helper.connectionState.phase == .connected ? .green : .gray)
+                    .fill(
+                        helper.connectionState.phase == .connected ? .green
+                        : helper.connectionState.phase == .blocked ? .red
+                        : .gray
+                    )
                     .frame(width: 8, height: 8)
             }
             Text(statusText)
@@ -190,6 +209,8 @@ struct MenuBarView: View {
             return "Connecting…"
         case .disconnected:
             return "Not connected"
+        case .blocked:
+            return "Blocked — tunnel lost, not connected"
         default:
             return helper.connectionState.phase.rawValue.capitalized
         }
@@ -201,7 +222,7 @@ struct MenuBarView: View {
         errorMessage = nil
         Task {
             do {
-                try await helper.connect(to: server)
+                try await helper.connect(to: server, killSwitchEnabled: killSwitchEnabled)
             } catch let err as HelperOperationError where err.code == "cancelled" {
                 // User hit Stop while this was connecting -- not a real error.
             } catch let err as HelperOperationError {
